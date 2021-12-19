@@ -18,7 +18,7 @@ def validate_view(request):
     else:
         return render(request, 'project1/main.html')
 
-def todo_view(request): # CSRF
+def todo_view(request): # CSRF and broken authentication
     if request.user.id == None:
         return render(request, 'project1/main.html', {'todo': "Access denied!"})
     message = request.GET['message'] # should be POST
