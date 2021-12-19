@@ -1,0 +1,4 @@
+db.sqlite3
+project1/__pycache
+migrations/__pycache__
+project1/templates/project1/CSRF.html

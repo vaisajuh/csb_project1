@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>main</title>
+  </head>
+  <body>
+    <h2>User: {{ user }}</h2>
+
+    <h3>Todos</h3>
+    <form action="{% url 'todo' %}" method="GET"> <!-- should be POST-->
+      <!-- {% csrf_token %} -->
+      <textarea name="message" rows="5" cols="50"></textarea><br>
+      <input type="submit" value="Send">
+    </form>
+    {{ todo }}
+
+    <ul>
+      {% for message in messages %}
+      <li><strong>User: </strong> {{ message.user }} <strong>Todo: </strong> {{ message.message }}</li>
+      {% endfor %}
+    </ul>
+    
+    <h3>Register bird</h3>
+    <form action="{% url 'addBird' %}" method="POST">
+      {% csrf_token %}
+      <input type="text" name="bird"><br>
+      <input type="submit" value="Register">
+    </form>
+    {{ register }}
+    {{ message }}
+    
+    <h3>Find bird</h3>
+    <form action="{% url 'getBird' %}" method="POST">
+      {% csrf_token %}
+      <input type="text" name="bird"><br>
+      <input type="submit" value="Search">
+    </form>
+    {{ get }}
+
+    <ul>
+      {% for bird in birds %}
+      <li><strong>{{ bird }}</li>
+      {% endfor %}
+    </ul>
+
+    <h3>Forum</h3>
+    <form action="{% url 'forum' %}" method="POST">
+      {% csrf_token %}
+      <textarea name="message" rows="5" cols="50"></textarea><br>
+      <input type="submit" value="Send">
+    </form>
+
+    <ul>
+      {% for  message in forum %}
+      <li><strong>{{ message }}</strong></li> <!-- should not be marked as safe-->
+      {% endfor %}
+    </ul>
+    {{ forum1 }} <br>
+    <h3><a href="{% url 'logout' %}">logout</a></h3>
+  </body>
+</html>
