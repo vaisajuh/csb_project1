@@ -38,9 +38,9 @@ def todo_view(request): # CSRF and broken access control
     get_messages = Messages.objects.filter(user=request.user)
     return render(request, 'project1/main.html', {'messages': get_messages})
 
-def register_bird_view(request): # broken access control
+def register_bird_view(request): # Broken access control
     # if request.user.id == anonymous:
-        #return render(request, 'project1/main.html', {'register': "Access denied!"})
+        # return render(request, 'project1/main.html', {'register': "Access denied!"})
     bird = request.POST['bird']
     if validate_length(bird) == False:
         return render(request, 'project1/main.html', {'register': "Input must be between 3 and 40"})
@@ -50,7 +50,7 @@ def register_bird_view(request): # broken access control
     message = "Success!"
     return render(request, 'project1/main.html', {'message': message})
 
-def get_bird_view(request): # injection and security misconfiguration
+def get_bird_view(request): # Injection and security misconfiguration
     if request.user.username == "anonymous":
         return render(request, 'project1/main.html', {'get': "Access denied!"})
     bird = request.POST['bird']
@@ -65,7 +65,7 @@ def get_bird_view(request): # injection and security misconfiguration
         birds.append(''.join(i))
     return render(request, 'project1/main.html', {'birds': birds})
 
-def forum_view(request): # xss
+def forum_view(request): # Xss
     message = request.POST['message']
     if validate_length(message) == False:
         return render(request, 'project1/main.html', {'forum1': "Input must be between 3 and 40"})
@@ -81,7 +81,7 @@ def get_messages():
     print(get_messages)
     messages = []
     for i in get_messages:
-        messages.append(mark_safe(i[0])) # should not be marked as safe
+        messages.append(mark_safe(i[0])) # Should not be marked as safe
     return messages
 
 def validate_length(entry):
