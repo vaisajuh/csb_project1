@@ -2,12 +2,14 @@ import sqlite3
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login, logout
 from django.utils.safestring import mark_safe
+from django.contrib.auth.models import User
 from . models import Messages
 
 
 
 def login_view(request):
     create_tables()
+
     return render(request, 'project1/login.html')
 
 def validate_view(request): # Security logging and monitoring failures
@@ -31,7 +33,7 @@ def validate_view(request): # Security logging and monitoring failures
 def todo_view(request): # CSRF and broken access control
     if request.user.username == "anonymous":
         return render(request, 'project1/main.html', {'todo': "Access denied!"})
-    message = request.GET['message'] # should be POST
+    message = request.GET['message'] # Should be POST
     if validate_length(message) == False:
         return render(request, 'project1/main.html', {'todo': "Input must be betweed 3 and 40"})
     Messages.objects.create(user=request.user, message=message)
@@ -56,10 +58,13 @@ def get_bird_view(request): # Injection and security misconfiguration
     bird = request.POST['bird']
     # bird = "%" + bird + "%"
     conn = sqlite3.connect('db.sqlite3')
+    #try:
     select_birds = conn.execute("SELECT b.bird FROM Birds b JOIN auth_user a ON b.user_id = a.id"\
         " WHERE b.user_id= %s AND bird LIKE '%%%s%%'"% (request.user.id, bird)) #injection
     # select_birds = conn.execute("SELECT bird FROM Birds WHERE user_id=? AND bird like ?",
     #  [request.user.id, bird]) correct
+    #catch:
+        #pass
     birds = []
     for i in select_birds:
         birds.append(''.join(i))
@@ -99,6 +104,14 @@ def create_tables():
     " (id INTEGER PRIMARY KEY, username TEXT, password TEXT)")
     conn.execute("CREATE TABLE IF NOT EXISTS Valid_logins"\
     " (id INTEGER PRIMARY KEY, username TEXT, password TEXT)")
+
+def create_user():
+    try:
+        User.objects.create_user('george', 'carelesswhisper')
+        User.objects.create_user('jormao', 'nokia5110')
+        User.objects.create_user('anonymous', 'anonymous')
+    except:
+        pass
 
 def logout_view(request):
     logout(request)
