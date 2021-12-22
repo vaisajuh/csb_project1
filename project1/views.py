@@ -39,7 +39,7 @@ def todo_view(request): # CSRF and broken access control
     return render(request, 'project1/main.html', {'messages': get_messages})
 
 def register_bird_view(request): # broken access control
-    # if request.user.id == None:
+    # if request.user.id == anonymous:
         #return render(request, 'project1/main.html', {'register': "Access denied!"})
     bird = request.POST['bird']
     if validate_length(bird) == False:
