@@ -9,7 +9,7 @@ from . models import Messages
 
 def login_view(request):
     create_tables()
-
+    create_users()
     return render(request, 'project1/login.html')
 
 def validate_view(request): # Security logging and monitoring failures
@@ -105,7 +105,7 @@ def create_tables():
     conn.execute("CREATE TABLE IF NOT EXISTS Valid_logins"\
     " (id INTEGER PRIMARY KEY, username TEXT, password TEXT)")
 
-def create_user():
+def create_users():
     try:
         User.objects.create_user('george', 'carelesswhisper')
         User.objects.create_user('jormao', 'nokia5110')
