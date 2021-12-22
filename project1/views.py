@@ -1,25 +1,34 @@
+import hashlib
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login, logout
 from . models import Messages
 import sqlite3
 from django.utils.safestring import mark_safe
 
+
 def login_view(request):
     create_tables()
     return render(request, 'project1/login.html')
 
-def validate_view(request): 
+def validate_view(request): # Security logging and monitoring failures
     username = request.POST['username']
     password = request.POST['password']
     user = authenticate(request, username=username, password=password)
+    #conn = sqlite3.connect('db.sqlite3')
     if user is not None:
+        #hash = hashlib.md5(password.encode())
+        #md5 = hash.hexdigest()
+        #conn.execute("INSERT INTO Valid_logins (username, password) VALUES (?,?)", [username, md5])
+        #conn.commit()
         login(request, user)
         return render(request, 'project1/main.html')
-    else:
-        return render(request, 'project1/main.html')
+    else: 
+        #conn.execute("INSERT INTO Invalid_logins (username, password) VALUES (?,?)", [username, password])
+        #conn.commit()
+        return render(request, 'project1/login.html', {'invalid': "Access denied!"})
 
-def todo_view(request): # CSRF and broken authentication
-    if request.user.id == None:
+def todo_view(request): # CSRF and broken access control
+    if request.user.username == "anonymous":
         return render(request, 'project1/main.html', {'todo': "Access denied!"})
     message = request.GET['message'] # should be POST
     if validate_length(message) == False:
@@ -28,8 +37,7 @@ def todo_view(request): # CSRF and broken authentication
     get_messages = Messages.objects.filter(user=request.user)
     return render(request, 'project1/main.html', {'messages': get_messages})
 
-
-def register_bird_view(request): #broken authentication
+def register_bird_view(request): # broken access control
     #if request.user.id == None:
         #return render(request, 'project1/main.html', {'register': "Access denied!"})
     bird = request.POST['bird']
@@ -41,38 +49,38 @@ def register_bird_view(request): #broken authentication
     message = "Success!"
     return render(request, 'project1/main.html', {'message': message})
 
-def get_bird_view(request): #injection and security misconfiguration
-    if request.user.id == None:
+def get_bird_view(request): # injection and security misconfiguration
+    if request.user.username == "anonymous":
         return render(request, 'project1/main.html', {'get': "Access denied!"})
     bird = request.POST['bird']
-    bird = "%" + bird + "%"
+    #bird = "%" + bird + "%"
     conn = sqlite3.connect('db.sqlite3')
-    select_birds = conn.execute("SELECT bird FROM Birds WHERE user_id= %s "\
-    "AND bird LIKE '%%%s%%'"% (request.user.id, bird)) #injection
+    select_birds = conn.execute("SELECT b.bird FROM Birds b JOIN auth_user a ON b.user_id = a.id"\
+        " WHERE b.user_id= %s AND bird LIKE '%%%s%%'"% (request.user.id, bird)) #injection
     #select_birds = conn.execute("SELECT bird FROM Birds WHERE user_id=? AND bird like ?", [request.user.id, bird]) #correct
     birds = []
     for i in select_birds:
         birds.append(''.join(i))
     return render(request, 'project1/main.html', {'birds': birds})
 
-def forum_view(request): #xss
+def forum_view(request): # xss
     message = request.POST['message']
     if validate_length(message) == False:
         return render(request, 'project1/main.html', {'forum1': "Input must be between 3 and 40"})
     conn = sqlite3.connect('db.sqlite3')
-    conn.execute("INSERT INTO Forum (message) VALUES (?)", [message])
+    conn.execute("INSERT INTO Forum (user_id, message) VALUES (?,?)", [request.user.id, message])
     conn.commit()
     messages = get_messages()
     return render(request, 'project1/main.html', {'forum': messages})
 
 def get_messages():
     conn = sqlite3.connect('db.sqlite3')
-    get_messages = conn.execute("SELECT message FROM Forum")
+    get_messages = conn.execute("SELECT message FROM Forum ").fetchall()
+    print(get_messages)
     messages = []
     for i in get_messages:
-        messages.append(mark_safe(''.join(i))) #should not be marked as safe
+        messages.append(mark_safe(i[0])) # should not be marked as safe
     return messages
-
 
 def validate_length(input):
     if len(input) in range(3, 40):
@@ -81,10 +89,11 @@ def validate_length(input):
 
 def create_tables():
     conn = sqlite3.connect('db.sqlite3')
-    conn.execute("CREATE TABLE IF NOT EXISTS Birds (id INTEGER PRIMARY KEY, user_id INTEGER, bird TEXT)")
-    conn.execute("CREATE TABLE IF NOT EXISTS Forum (id INTEGER PRIMARY KEY, message TEXT)")
-
-
+    conn.execute("CREATE TABLE IF NOT EXISTS Birds (id INTEGER PRIMARY KEY, user_id INTEGER REFERENCES auth_user, bird TEXT)")
+    conn.execute("CREATE TABLE IF NOT EXISTS Forum (id INTEGER PRIMARY KEY, user_id INTEGER REFERENCES auth_user, message TEXT)")
+    conn.execute("CREATE TABLE IF NOT EXISTS Invalid_logins (id INTEGER PRIMARY KEY, username TEXT, password TEXT)")
+    conn.execute("CREATE TABLE IF NOT EXISTS Valid_logins (id INTEGER PRIMARY KEY, username TEXT, password TEXT)")
+    
 def logout_view(request):
     logout(request)
     return render(request, 'project1/login.html')
