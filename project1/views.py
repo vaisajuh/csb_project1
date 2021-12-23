@@ -6,7 +6,6 @@ from django.contrib.auth.models import User
 from . models import Messages
 
 
-
 def login_view(request):
     create_tables()
     create_users()
@@ -107,9 +106,10 @@ def create_tables():
 
 def create_users():
     try:
-        User.objects.create_user('george', 'carelesswhisper')
-        User.objects.create_user('jormao', 'nokia5110')
-        User.objects.create_user('anonymous', 'anonymous')
+        User.objects.create_superuser(username='admin', password='admin')
+        User.objects.create_user(username='george', password='carelesswhisper')
+        User.objects.create_user(username='jormao', password='nokia5110')
+        User.objects.create_user(username='anonymous', password='anonymous')
     except:
         pass
 
