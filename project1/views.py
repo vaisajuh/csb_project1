@@ -4,7 +4,7 @@ from django.contrib.auth import authenticate, login, logout
 from django.utils.safestring import mark_safe
 from django.contrib.auth.models import User
 from . models import Messages
-
+import hashlib
 
 def login_view(request):
     create_tables()
